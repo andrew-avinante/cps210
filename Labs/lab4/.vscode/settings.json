@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "iostream": "c",
+        "__locale": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "__bit_reference": "cpp",
+        "__split_buffer": "cpp",
+        "initializer_list": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "bitset": "cpp",
+        "iterator": "cpp",
+        "utility": "cpp",
+        "ios": "cpp"
+    }
+}
