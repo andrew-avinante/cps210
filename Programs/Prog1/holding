@@ -1,0 +1,304 @@
+#include <iostream>
+using namespace std;
+
+struct Location
+{
+    int row;
+    int col;
+};
+
+
+class Cell
+{
+    public:
+        bool isAlive;
+        Location loc;
+        int neighbors;
+        inline void SetRow(int r) { loc.row = r; }
+        inline void SetCol(int c) { loc.row = c; }     
+        inline void BirthCell() { isAlive = true; }
+        inline void KillCell() { isAlive = false; }
+        inline int GetNeighbor() { return neighbors; }
+        inline void AddNeighbor() { neighbors += 1; }
+        inline void ResetNeighbor() { neighbors = 0; }
+};
+
+class Board
+{
+    public:
+        int width;
+        int height;
+        Cell** ecosystem;
+        Cell** prevEco;
+        Cell** prevPrevEco;
+        int generations;
+        int genCount;
+        //Cell** prevGen;
+        Board(int h, int w, int g)
+        {
+            width = w;
+            height = h;
+            generations = g;
+            genCount = 0;
+            CreateBoard(width, height,  ecosystem = new Cell*[width]);
+            CreateBoard(width, height,  prevEco = new Cell*[width]);
+            CreateBoard(width, height,  prevPrevEco = new Cell*[width]);
+            PopulateCells();
+            // prevGen = ecosystem;
+            PrintBoard();
+            cout << "INITIAL GENERATION: 0" << endl << endl;
+        }
+
+        void PopulateCells()
+        {
+            int lifeForms =  3 + (rand() % (width * height));
+            for (int i = 0; i < lifeForms; i++)
+            {
+                int randRow = 1 + (rand() % (width)-1);
+                int randCol = 1 + (rand() % (height)-1);
+                ecosystem[randRow][randCol].BirthCell();
+                AddCurrentGen();
+                // ecosystem[1][0].BirthCell();
+                // ecosystem[0][1].BirthCell();
+                // ecosystem[1][2].BirthCell();
+            }
+        }
+
+        void PrintBoard()
+        {
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (ecosystem[i][j].isAlive)
+                    {
+                        cout << "[ x ]";
+                    }
+                    else
+                    {
+                        cout << "[   ]";
+                    }
+                }
+                cout << endl;
+            }
+        }
+
+        void PrintPrevBoard()
+        {
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (prevPrevEco[i][j].isAlive)
+                    {
+                        cout << "[ x ]";
+                    }
+                    else
+                    {
+                        cout << "[   ]";
+                    }
+                }
+                cout << endl;
+            }
+        }
+
+        void FindNeighbors()
+        {
+            Cell currentCell;
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    currentCell = ecosystem[i][j];
+                    ecosystem[i][j].ResetNeighbor();
+                    if (currentCell.loc.row != 0 && currentCell.loc.col != 0 && ecosystem[i-1][j-1].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Top Left;" << endl;
+                    }
+
+                    if (currentCell.loc.row != 0 && ecosystem[i-1][j].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Top;" << endl;
+                    }
+
+                    if (currentCell.loc.row != 0 && currentCell.loc.col != height - 1 && ecosystem[i-1][j+1].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Top Right;" << endl;
+                    }
+
+                    if (currentCell.loc.col != height - 1 && ecosystem[i][j+1].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Right;" << endl;
+                    }
+
+                    if (currentCell.loc.row != width - 1 && currentCell.loc.col != height - 1 && ecosystem[i+1][j+1].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Bottom Right;" << endl;
+                    }
+
+                    if (currentCell.loc.row != width - 1 && ecosystem[i+1][j].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Bottom;" << endl;
+                    }
+
+                    if (currentCell.loc.row != width - 1 && currentCell.loc.col != 0 && ecosystem[i+1][j-1].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col<< " Bottom Left;" << endl;
+                    }
+                    
+                    if (currentCell.loc.col != 0 && ecosystem[i][j-1].isAlive)
+                    {
+                        ecosystem[i][j].AddNeighbor();
+                        //cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " Left;" << endl;
+                    }
+                    //cout << endl;
+                }
+            }
+        }
+
+        void Spawn()
+        {
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (ecosystem[i][j].GetNeighbor() == 3)
+                    {
+                        ecosystem[i][j].BirthCell();
+                        AddCurrentGen();
+                    }
+                }
+            }
+        }
+
+        void Kill()
+        {
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (ecosystem[i][j].GetNeighbor() < 2 || ecosystem[i][j].GetNeighbor() > 3)
+                    {
+                        ecosystem[i][j].KillCell();
+                    }
+                }
+            }
+        }
+
+        void DebugPrint()
+        {
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    cout << ecosystem[i][j].loc.row << ' ' << ecosystem[i][j].loc.col << " --> " <<  ecosystem[i][j].GetNeighbor() << ' ' << ecosystem[i][j].isAlive << endl;
+                }
+            }
+            cout << endl;
+        }
+
+        inline void AddCurrentGen() { ++genCount; }
+        inline int GetCurrentGen() { return genCount; }
+        inline void ResetCurrentGen() { genCount = 0; }
+
+        void SetPrevGen(Cell** previous, Cell** current)
+        {
+           for(int i = 0; i < width; i++)
+           {
+               previous[i] = new Cell[height];
+               for (int j = 0; j < height; j++)
+               {
+                   if(current[i][j].isAlive)
+                   {
+                       previous[i][j].BirthCell();
+                   }
+                   else
+                   {
+                       previous[i][j].KillCell();
+                   }
+               }
+            }
+        }
+
+        bool AreEqual()
+        {
+            for(int i = 0; i < width; i++)
+           {
+               for (int j = 0; j < height; j++)
+               {
+                   if(ecosystem[i][j].isAlive != prevEco[i][j].isAlive && prevPrevEco[i][j].isAlive != ecosystem[i][j].isAlive)
+                   {
+                       return false;
+                   }
+               }
+            }
+            return true;
+        }
+
+    private:
+        void CreateBoard(int w, int h, Cell** board)
+        {     
+           for(int i = 0; i < w; i++)
+           {
+               board[i] = new Cell[h];
+               for (int j = 0; j < h; j++)
+               {
+                   board[i][j].loc.col = j;
+                   board[i][j].loc.row = i;
+                   board[i][j].KillCell();
+                   board[i][j].ResetNeighbor();
+               }
+           }
+        }
+};
+
+int main()
+{
+    srand(time(0));
+    int w;
+    int h;
+    int g;
+    cout << "Input height: ";
+    cin >> h;
+    cout << "Input width: ";
+    cin >> w;
+    cout << "Input generations: ";
+    cin >> g;
+
+    Board mainBoard = Board(w,h,g);
+    cout << "RUNNING" << endl;
+    for(int i = 0; i < mainBoard.generations; i++)
+    {
+        mainBoard.SetPrevGen(mainBoard.prevPrevEco, mainBoard.prevEco);
+        mainBoard.SetPrevGen(mainBoard.prevEco, mainBoard.ecosystem);
+        mainBoard.FindNeighbors();
+        mainBoard.Spawn();
+        mainBoard.Kill();
+        //
+        if((mainBoard.AreEqual()) && i != 0)
+        {
+            mainBoard.PrintBoard();
+            if(mainBoard.GetCurrentGen()== 0)
+            {
+                cout << "ALL LIFE FORMS HAVE DIED OUT ON GENERATION: " << i+1 << endl;
+            }
+            else
+            {
+                cout << "THE ENVIRONMENT STABILIZED ON GENERATION: " << i-1 << endl;
+            }
+            return 0;
+        }
+        mainBoard.ResetCurrentGen();
+    }
+    // mainBoard.PrintPrevBoard();
+    mainBoard.PrintBoard();
+     cout << "GENERATION: " << mainBoard.generations << endl << endl; //<< ' ' << mainBoard.AreEqual()
+    return 0;
+}

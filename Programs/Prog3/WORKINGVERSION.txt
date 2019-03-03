@@ -1,0 +1,110 @@
+#include <functional>
+#include <vector>
+#include <iostream>
+#include <string>
+#include <map>
+#include <algorithm>
+#include <queue>
+#include <iomanip>
+
+using namespace std;
+
+// typedef pair<string, int> minimap;
+// struct cmp
+//     {
+//         bool operator()(const minimap &a, const minimap &b) { return (a.first < b.first);}
+//     };
+
+void getInput(map<string, int> &inputMap)
+{
+    string input;
+    char delimiter = ' ';
+    while (getline(cin, input))
+    {
+        if(input.empty())
+        {
+            break;
+        }
+        inputMap[input.substr(0, input.find(delimiter))] = stoi(input.substr(input.find(delimiter) + 1, input.size() - 1));
+    }
+}
+
+void createMatrix(map<string, int> &inputMap, vector<int> &sums, vector<vector<int>> &matrix)
+{
+    int count = 0;
+    int previous;
+    for (auto const& i : inputMap)
+    {
+        vector<int> column(inputMap.size());
+        sums.push_back(!sums.empty() ? sums[previous] + i.second : i.second);
+        previous = count;
+        column[count] = i.second;
+        matrix.push_back(column);
+        count++;
+    }
+}
+
+void findSmallestRoot(vector<int> &sums, vector<vector<int>> &matrix)
+{
+    int startingPoint = 1;
+    for(int i = 0; i < matrix.size(); i++, startingPoint++)
+    {
+        for(int x = startingPoint, y = 0; x < matrix.size(); x++, y++)
+        {
+            if (startingPoint == 1)
+            {
+                matrix[y][x] = ((matrix[y][y] < matrix[x][x]) ? matrix[y][y] : matrix[x][x]) + sums[x] - ((y==0) ? 0 : sums[y-1]);
+            }
+            else
+            {
+                priority_queue<int, vector<int>, greater<int>> minHeap;
+                for(int j = y, k = y + 2; k <= x; j++, k++)
+                {
+                    minHeap.push(matrix[y][j] + matrix[k][x]);
+                    //cout << "(" << x << ", " << y << "): <" << j << ", " << y << "> <" << x << ", " << k << ">" << " " << matrix[j][y] + matrix[x][k] << " " << minHeap.top() << endl;
+                }
+                minHeap.push(matrix[y][x-1]);
+                minHeap.push(matrix[y+1][x]);
+                matrix[y][x] = minHeap.top() + sums[x] - ((y==0) ? 0 : sums[y-1]);
+            }
+            // if (startingPoint == 1)
+            // {
+            //     matrix[x][y] = ((matrix[y][y] < matrix[x][x]) ? matrix[y][y] : matrix[x][x]) + sums[x] - ((y==0) ? 0 : sums[y-1]);
+            // }
+            //  else
+            // {
+            //     matrix[x][y] = ((matrix[x][x] + matrix[x-2][y] <= matrix[y][y] + matrix[x][y+2]) 
+            //     ?
+            //     matrix[x][x] + matrix[x-2][y] 
+            //     :
+            //     matrix[y][y] + matrix[x][y+2]) + sums[x] - ((y==0) ? 0 : sums[y-1]);
+            // }
+        }
+    }
+    for(vector<int> i : matrix)
+    {
+        for(int j : i)
+        {
+            cout << setw(5) << j << "|";
+        }
+        cout << endl;
+    }
+}
+
+int main() 
+{
+    map<string, int> inputMap;
+    vector<int> sums;
+    vector<vector<int>> matrix;
+    getInput(inputMap);
+    createMatrix(inputMap, sums, matrix);
+    findSmallestRoot(sums, matrix);
+    cout << matrix[0][matrix.size()-1] << endl;
+    return 0;
+}
+
+//g++ -std=c++14 *.cpp
+
+//pair<string, int>
+//only check roots that you havent checked yet
+//sort(cont.begin(),cont.end());

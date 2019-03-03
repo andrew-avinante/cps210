@@ -1,0 +1,153 @@
+#include <functional>
+#include <vector>
+#include <iostream>
+#include <string>
+#include <map>
+#include <algorithm>
+#include <queue>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
+
+using namespace std;
+
+vector<pair<string, int>> inputMap;
+vector<int> sums;
+vector<vector<int>> matrix;
+
+void getInput()
+{
+    pair<string,int> p;
+    string input;
+    char delimiter = ' ';
+    while (getline(cin, input))
+    {
+        if(input.empty())
+        {
+            break;
+        }
+        p.first = input.substr(0, input.find(delimiter));
+        p.second = stoi(input.substr(input.find(delimiter) + 1, input.size() - 1));
+        inputMap.push_back(p);
+    }
+    sort(inputMap.begin(), inputMap.end());
+}
+
+void createMatrix()
+{
+    int count = 0;
+    int previous;
+    vector<int> column(inputMap.size());
+    for (auto const& i : inputMap)
+    {
+        sums.push_back(!sums.empty() ? sums[previous] + i.second : i.second);
+        previous = count;
+        column[count] = i.second;
+        matrix.push_back(column);
+        ++count;
+        column.clear();
+        column.resize(inputMap.size());
+    }
+}
+
+int findSmallestRoot()
+{
+    int fast[16000];
+    fill_n(fast, 16000, -1);
+    int startingPoint = 1, root = 0;
+    int cord1, cord2;
+    pair<int, int> minNum;
+    for(int i = 0; i < matrix.size(); ++i, ++startingPoint)
+    {
+        for(int x = startingPoint, y = 0; x < matrix.size(); ++x, ++y)
+        {
+            if(fast[y] == -1)
+            {
+                fast[y] = y;
+            }
+            minNum = {fast[y], matrix[y][x-1]};
+            // cout << "TEST " << matrix[]
+            if (startingPoint != 1)
+            {
+                for(int j = fast[y], k = fast[y] + 2; k <= x; ++j, ++k)
+                {
+                    //cout << "LINE: (" << j << ", " << y << "), (" << x << ", " << k << ") (" << x << ", " << y << ")" << endl;
+                    cord1 = matrix[y][j], cord2 = matrix[k][x];
+                    minNum = {( minNum.second > cord1 + cord2) ? j : minNum.first, ( minNum.second > cord1 + cord2) ? cord1 + cord2 : minNum.second};
+                    //cout << "(" << x << ", " << y << "): <" << j << ", " << y << "> <" << x << ", " << k << ">" << " " << matrix[j][y] + matrix[x][k] << " " << minHeap.top() << endl;
+                }
+                
+                minNum = {( minNum.second > matrix[y][x-1]) ? x : minNum.first,( minNum.second > matrix[y][x-1]) ? matrix[y][x-1] : minNum.second};
+                minNum = {( minNum.first > matrix[y+1][x]) ? x : minNum.first, ( minNum.second > matrix[y+1][x]) ? matrix[y+1][x] : minNum.second};
+                matrix[y][x] = minNum.second + sums[x] - ((y==0) ? 0 : sums[y-1]);
+                //cout << "(" << x << ", " << y << ") ROOT: " << minNum.first << endl;
+            }
+            else
+            {
+                cord1 = matrix[y][y], cord2 = matrix[x][x];
+                matrix[y][x] = (( cord1 < cord2 ) ? cord1 : cord2) + sums[x] - ((y==0) ? 0 : sums[y-1]);
+            }
+            root = minNum.first;
+            //cout << y << " " << root << endl;
+            fast[y] = root;         
+        }
+    }
+    cout << root << endl;
+    // for(vector<int> i : matrix)
+    // {
+    //     for(int j : i)
+    //     {
+    //         cout << setw(5) << j << "|";
+    //     }
+    //     cout << endl;
+    // }
+    return root;
+}
+
+int main() 
+{
+    std::chrono::time_point<std::chrono::system_clock> start, end; 
+
+    getInput();
+    createMatrix();
+
+    start = std::chrono::system_clock::now(); 
+    cout << "START" << endl;
+    cout << inputMap[findSmallestRoot() + 1].first << " " << matrix[0][matrix.size()-1] << endl;
+    end = std::chrono::system_clock::now(); 
+  
+    std::chrono::duration<double> elapsed_seconds = end - start; 
+    std::time_t end_time = std::chrono::system_clock::to_time_t(end); 
+  
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    //cout << matrix[0][matrix.size()-1] << endl;
+    return 0;
+}
+
+//g++ -std=c++14 *.cpp
+
+//pair<string, int>
+//only check roots that you havent checked yet
+//sort(cont.begin(),cont.end());
+
+// ape 18
+// bat 21
+// cat 20
+// dog 15
+// emu 21
+
+// VJIMPR 8
+// RYURYE 1
+// XFPVTC 10
+// IYUJLR 7
+// QKKPHV 6
+// TIECPR 4
+// GELIEL 12
+// SDITJG 11
+// AQOBYN 2
+// GEXZNH 6
+// VHKFRE 10
+// FRFOLC 7
+// OEXUBS 8
+// MFIENC 1
+// APALAT 7
